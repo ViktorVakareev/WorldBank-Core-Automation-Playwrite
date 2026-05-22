@@ -1,0 +1,24 @@
+{
+  "enabled": true,
+  "server": {
+    "url": "https://demo.reportportal.io/api/v1",
+    "project": "worldbank_automation",
+    "authentication": {
+      "uuid": "00000000-0000-0000-0000-000000000000"
+    }
+  },
+  "launch": {
+    "name": "WorldBank Enterprise Quality Gate",
+    "description": "Component-Based Playwright Architecture Running via Docker Agent",
+    "attributes": [
+      {
+        "key": "Engine",
+        "value": "Playwright-DotNet10"
+      },
+      {
+        "key": "Tier",
+        "value": "Regression"
+      }
+    ]
+  }
+}

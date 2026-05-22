@@ -1,0 +1,17 @@
+{
+  "StandardUser": {
+    "Username": "standard_user",
+    "Password": "password123",
+    "Role": "standard"
+  },
+  "AdminUser": {
+    "Username": "admin_user",
+    "Password": "admin789!",
+    "Role": "admin"
+  },
+  "LockedUser": {
+    "Username": "locked_account",
+    "Password": "password123",
+    "Role": "standard"
+  }
+}

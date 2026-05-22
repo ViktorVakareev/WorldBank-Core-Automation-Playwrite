@@ -1,0 +1,26 @@
+# Build Results
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Playwright & Test Artifacts
+TestResults/
+test-results/
+playwright-report/
+bin/
+obj/
+.playwright/
+**/allure-results/
+**/allure-report/
+
+# OS/Editor Junk
+.vs/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Environment & Secrets
+.env
+local.runsettings

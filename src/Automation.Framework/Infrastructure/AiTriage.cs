@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Allure.Net.Commons;
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
 using NUnit.Framework;
@@ -22,13 +21,16 @@ public abstract class AiTriage : PageTest
     {
         var options = new BrowserTypeLaunchOptions();
 
-        // 🛡️ DEVSECOPS FIX: Prevents Docker container deadlocks & memory exhaustion
-        options.Args = new[]
+        // 🛡️ DEVSECOPS FIX: Only apply aggressive memory flags if running inside Jenkins Linux
+        if (Environment.GetEnvironmentVariable("CI") == "true")
         {
-            "--disable-dev-shm-usage",
-            "--no-sandbox",
-            "--disable-gpu"
-        };
+            options.Args = new[]
+            {
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+                "--disable-gpu"
+            };
+        }
         return options;
     }
 
@@ -41,7 +43,7 @@ public abstract class AiTriage : PageTest
         options.ViewportSize = new ViewportSize { Width = 1920, Height = 1080 };
 
         // 🛡️ I/O ISOLATION: Guarantees parallel browser threads NEVER lock each other's video files
-        var threadId = TestContext.CurrentContext.WorkerId ?? Guid.NewGuid().ToString();
+        var threadId = TestContext.CurrentContext.WorkerId ?? Guid.NewGuid().ToString("N");
         options.RecordVideoDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestResults", "videos", threadId);
         options.RecordVideoSize = new RecordVideoSize { Width = 1280, Height = 720 };
 
@@ -65,8 +67,8 @@ public abstract class AiTriage : PageTest
             TestContext.AddTestAttachment(screenshotPath, "📸 UI State on Failure");
         }
 
-        // CRITICAL: Force Playwright to flush the .webm video file to disk
-        await Context.CloseAsync();
+        // 🚨 CRITICAL BUG FIX: We NO LONGER call await Context.CloseAsync() here! 
+        // PageTest handles this natively. Doing it manually causes TargetClosedExceptions.
 
         if (Page.Video != null)
         {
@@ -79,7 +81,8 @@ public abstract class AiTriage : PageTest
             {
                 try
                 {
-                    await Page.Video.DeleteAsync(); // Save Jenkins disk space
+                    // Restored: Keeps your CI/CD storage lean by wiping successful test videos
+                    await Page.Video.DeleteAsync();
                 }
                 catch (IOException ex)
                 {

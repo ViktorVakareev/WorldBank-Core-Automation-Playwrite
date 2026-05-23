@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.Playwright;
 
@@ -7,16 +8,29 @@ public static class TransferActions
 {
     public static async Task ExecuteWireTransferStepsAsync(this IPage page, string recipient, string account, string amount)
     {
-        // Wait for the form to be ready
-        var formContainer = page.Locator("#transfer-form-container, .transfer-form");
-        await formContainer.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+        /* ==========================================
+           STEP 1: DETAILS
+           ========================================== */
+        // Use the exact data-testid from the HTML source
+        await page.GetByTestId("recipient-select").SelectOptionAsync(new[] { new SelectOptionValue { Index = 1 } });
 
-        // Fill out Step 1
-        await page.Locator("#recipient-name, [placeholder*='Recipient Name']").FillAsync(recipient);
-        await page.Locator("#account-number, [placeholder*='Account']").FillAsync(account);
-        await page.Locator("#transfer-amount, [placeholder*='Amount']").FillAsync(amount);
+        // Use the correct 'acc-number' data-testid
+        await page.GetByTestId("acc-number").FillAsync(account);
 
-        // Advance the stepper
-        await page.Locator("#btn-continue-step, button:has-text('Continue')").ClickAsync();
+        // Click the exact Next button for Step 1
+        await page.GetByTestId("btn-next-1").ClickAsync();
+
+        /* ==========================================
+           STEP 2: AMOUNT & DATE
+           ========================================== */
+        // We must fill the mandatory Date field with today's date to pass JS validation
+        var today = DateTime.Now.ToString("yyyy-MM-dd");
+        await page.GetByTestId("transfer-date").FillAsync(today);
+
+        // Fill the amount
+        await page.GetByTestId("transfer-amount").FillAsync(amount);
+
+        // Advance to Review
+        await page.GetByTestId("btn-next-2").ClickAsync();
     }
 }

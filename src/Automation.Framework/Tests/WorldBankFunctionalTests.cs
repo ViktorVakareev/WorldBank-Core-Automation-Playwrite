@@ -34,7 +34,10 @@ public class WorldBankFunctionalTests : AiTriage
     {
         // 1. Arrange
         var bogusRecipient = DataFactory.GenerateRecipientName();
-        var account = "1234567890123456789012"; // The HTML maxlength and JS validation strictly require 22 digits
+
+        // 🚀 We fixed the app! The JS validation now correctly accepts the 22-digit requirement.
+        var account = "1234567890123456789012";
+
         var amount = DataFactory.GenerateRandomAmount(500, 1500);
 
         // 2. Act: Fill Step 1 and Step 2

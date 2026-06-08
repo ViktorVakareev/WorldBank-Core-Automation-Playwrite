@@ -37,6 +37,23 @@ jobs:
         # Runs the tests using the compiled DLLs without rebuilding
         run: dotnet test --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx"
 
+      - name: 📊 Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        id: allure-report
+        with:
+          allure_results: allure-results
+          gh_pages: gh-pages
+          allure_report: allure-report
+          allure_history: allure-history
+
+      - name: 🚀 Deploy Allure Report to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
       - name: 📊 Upload Test Results (On Failure)
         # Always run this step even if the tests fail, so we can see what broke
         if: always()

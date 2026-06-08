@@ -1,17 +1,14 @@
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Allure.NUnit;
 using Microsoft.Playwright;
 using Microsoft.Playwright.NUnit;
-using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using System.Text;
+using System.Text.Json;
 
 namespace Automation.Framework.Infrastructure;
 
 [TestFixture]
+[AllureNUnit]
 public abstract class AiTriage : PageTest
 {
     // Singleton HTTP client prevents port exhaustion during heavy parallel Llama requests

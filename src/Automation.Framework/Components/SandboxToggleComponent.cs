@@ -1,15 +1,18 @@
+using System.Threading.Tasks;
 using Microsoft.Playwright;
 
 namespace Automation.Framework.Components;
 
-public class SandboxToggleComponent
+public class SandboxToggleComponent : BaseComponent
 {
-    private readonly IPage _page;
+    // Scope search strictly to the header/banner area
+    public SandboxToggleComponent(IPage page)
+        : base(page, page.GetByRole(AriaRole.Banner))
+    {
+    }
 
-    public SandboxToggleComponent(IPage page) => _page = page;
-
-    public ILocator PublicSandboxBtn => _page.Locator("button:has-text('Public Sandbox')");
-    public ILocator SecureSandboxBtn => _page.Locator("button:has-text('Secure Sandbox')");
+    public ILocator PublicSandboxBtn => RootLocator.Locator("button:has-text('Public Sandbox'), a:has-text('Public Sandbox')");
+    public ILocator SecureSandboxBtn => RootLocator.Locator("button:has-text('Secure Sandbox'), a:has-text('Secure Sandbox')");
 
     public async Task SwitchToSecureAsync()
     {

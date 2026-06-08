@@ -1,37 +1,42 @@
-using System.Threading.Tasks;
 using Microsoft.Playwright;
+using ReportPortal.Client.Abstractions.Responses;
+using System;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Automation.Framework.Components;
 
-public class GlobalNavigationComponent
+public class GlobalNavigationComponent : BaseComponent
 {
-    private readonly IPage _page;
-
-    // 🛡️ LOCATORS: Scoped strictly to the navigation header
-    public ILocator BrandTitle => _page.Locator(".brand-title, [data-testid='app-title']");
-    public ILocator HomeLink => _page.GetByRole(AriaRole.Link, new() { Name = "Home" });
-    public ILocator DashboardLink => _page.GetByRole(AriaRole.Link, new() { Name = "Dashboard" });
-    public ILocator WireTransferLink => _page.GetByRole(AriaRole.Link, new() { Name = "Wire Transfer" });
-    public ILocator SettingsLink => _page.GetByRole(AriaRole.Link, new() { Name = "Settings" });
-
-    public ILocator PublicSandboxBadge => _page.GetByText("Public Sandbox");
-    public ILocator SecureSandboxBadge => _page.GetByText("Secure Sandbox");
-
     public GlobalNavigationComponent(IPage page)
+        : base(page, page.GetByRole(AriaRole.Banner))
     {
-        _page = page;
     }
 
-    // Encapsulated routing logic
-    public async Task NavigateToAsync(string target)
+    public ILocator BrandTitle => RootLocator.Locator(".brand-title, [data-testid='app-title']");
+    public ILocator PublicSandboxBadge => RootLocator.GetByText("Public Sandbox");
+    public ILocator SecureSandboxBadge => RootLocator.GetByText("Secure Sandbox");
+
+    public async Task NavigateToAsync(string destination)
     {
-        ILocator element = target.ToLower() switch
+        string normalizedDestination = destination.ToLower().Trim();
+
+        string expectedEndpoint = normalizedDestination switch
         {
-            "dashboard" => DashboardLink,
-            "wire transfer" => WireTransferLink,
-            "settings" => SettingsLink,
-            _ => HomeLink
+            "dashboard" => "**/dashboard.html*",
+            "wire transfer" => "**/transfer.html*",
+            "settings" => "**/settings.html*",
+            _ => "**/index.html*"
         };
-        await element.ClickAsync();
+
+        // 1. Establish network listener to prevent deadlocks
+        var navTask = Page.WaitForURLAsync(expectedEndpoint, new PageWaitForURLOptions { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+        // 2. Click without waiting
+        await RootLocator.GetByRole(AriaRole.Link, new() { NameRegex = new Regex(destination, RegexOptions.IgnoreCase) })
+                         .ClickAsync(new LocatorClickOptions { NoWaitAfter = true });
+
+        // 3. Resolve the route instantly
+        await navTask;
     }
 }

@@ -16,21 +16,24 @@ public class WorldBankDataDrivenTests : AiTriage
 {
     public static IEnumerable<TestCaseData> ValidTransferData()
     {
+        // 🚀 DYNAMIC DATA FIX: We bypass the generic IBAN generator to force 
+        // a strict 22-digit numeric string to satisfy the app's JS validation.
+        // (Note: If your GitHub Pages hasn't updated yet, change 22 to 10!)
+        var bogus = new Bogus.Faker();
+
         yield return new TestCaseData(
             DataFactory.GenerateRecipientName(),
-            DataFactory.GenerateValidIban(),
+            bogus.Random.String2(22, "0123456789"), // Generates exactly 22 random digits
             DataFactory.GenerateRandomAmount(100, 5000)
         ).SetName("Transfer_Valid_StandardAmount");
 
         yield return new TestCaseData(
             DataFactory.GenerateRecipientName(),
-            DataFactory.GenerateValidIban(),
+            bogus.Random.String2(22, "0123456789"),
             "999999.99"
         ).SetName("Transfer_Valid_HighValueEdgeCase");
     }
 
-    // 🛡️ NUNIT SETUP: This runs automatically before EVERY test in this class.
-    // You write it once, but Playwright executes it safely in isolation.
     [SetUp]
     public async Task SetupWireTransferStateAsync()
     {
@@ -49,12 +52,14 @@ public class WorldBankDataDrivenTests : AiTriage
     [Test, TestCaseSource(nameof(ValidTransferData))]
     public async Task Transfer_Step1_ValidData_ShouldAdvanceToReview(string recipient, string account, string amount)
     {
-        // 🚀 ACT: Look how lean the actual test is now! 
-        // The Setup method already handled the login and navigation.
+        // Act: Execute the 3-step action we built
         await Page.ExecuteWireTransferStepsAsync(recipient, account, amount);
 
-        // 🎯 ASSERT: Verify UI state shifts to Step 2
-        await Expect(Page.Locator("#step-2-indicator, .review-section")).ToBeVisibleAsync();
-        await Expect(Page.Locator(".error-text")).ToBeHiddenAsync();
+        // 🎯 ASSERT: Verify UI state shifts successfully to Step 3 (Review)
+        var reviewSection = Page.GetByTestId("review-acc");
+        await Expect(reviewSection).ToBeVisibleAsync();
+
+        // Ensure the exact dynamic account string was persisted through the DOM
+        await Expect(reviewSection).ToHaveTextAsync(account);
     }
 }

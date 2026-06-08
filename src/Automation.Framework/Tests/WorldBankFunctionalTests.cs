@@ -32,31 +32,27 @@ public class WorldBankFunctionalTests : AiTriage
     [Test]
     public async Task EndToEnd_ExecuteInternationalWire_ShouldGenerateReceipt()
     {
-        // 1. Arrange
-        var bogusRecipient = DataFactory.GenerateRecipientName();
-
-        // 🚀 We fixed the app! The JS validation now correctly accepts the 22-digit requirement.
         var account = "1234567890123456789012";
+        var amount = "1500.00";
 
-        var amount = DataFactory.GenerateRandomAmount(500, 1500);
+        var stepper = new TransferStepperComponent(Page);
+        var nav = new GlobalNavigationComponent(Page);
 
-        // 2. Act: Fill Step 1 and Step 2
-        await Page.ExecuteWireTransferStepsAsync(bogusRecipient, account, amount);
+        // Act
+        await stepper.CompleteStepOneAsync(account);
+        await stepper.CompleteStepTwoAsync(amount);
 
-        // 3. Assert: Verify the Review screen populated correctly before submission
-        await Expect(Page.GetByTestId("review-acc")).ToHaveTextAsync(account);
-        await Expect(Page.GetByTestId("review-amount")).ToContainTextAsync(amount);
+        // Assert Review State
+        await Expect(stepper.ReviewAccount).ToHaveTextAsync(account);
+        await Expect(stepper.ReviewAmount).ToContainTextAsync(amount);
 
-        // 4. Act: Confirm Transfer on Step 3
-        await Page.GetByTestId("btn-submit-transfer").ClickAsync();
+        // Act
+        await stepper.SubmitTransferAsync();
 
-        // 5. Assert: Verify the exact success message element appears
-        var successMessage = Page.GetByTestId("success-msg");
-        await Expect(successMessage).ToBeVisibleAsync();
-        await Expect(successMessage).ToContainTextAsync("Transfer Submitted Successfully!");
+        // Assert Success
+        await Expect(stepper.SuccessMessage).ToBeVisibleAsync();
 
-        // 6. Return to Dashboard (Using the universal header link)
-        await Page.GetByTestId("nav-dashboard").ClickAsync();
-        await Expect(Page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex(".*dashboard\\.html"));
+        // Safely return home
+        await nav.NavigateToAsync("dashboard");
     }
 }

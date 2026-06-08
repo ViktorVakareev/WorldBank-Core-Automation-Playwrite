@@ -1,0 +1,47 @@
+name: E2E Quality Gate
+
+# 🚀 1. TRIGGERS: Run on Pull Requests to main, or manually via a button
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: 
+
+jobs:
+  playwright-tests:
+    timeout-minutes: 15 # Fails the pipeline if it hangs, preventing runaway billing
+    runs-on: ubuntu-latest # 🐧 Headless Linux container (Fastest & Cheapest)
+
+    env:
+      # 🛡️ THE HOOK: This triggers the headless & memory-safe logic we wrote in AiTriage.cs
+      CI: true 
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Update to '7.0.x' if you are using an older .NET version
+
+      - name: 🏗️ Build Framework
+        run: dotnet build
+
+      - name: 🌐 Install Playwright Browsers & OS Dependencies
+        # IMPORTANT: Replace 'Automation.Framework' with your exact test project folder name!
+        run: pwsh ./Automation.Framework/bin/Debug/net8.0/playwright.ps1 install --with-deps
+
+      - name: 🧪 Execute UI Test Suite
+        # Runs the tests using the compiled DLLs without rebuilding
+        run: dotnet test --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx"
+
+      - name: 📊 Upload Test Results (On Failure)
+        # Always run this step even if the tests fail, so we can see what broke
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunit-test-results
+          path: '**/TestResults/'
+          retention-days: 7

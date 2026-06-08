@@ -21,16 +21,36 @@ public abstract class AiTriage : PageTest
     {
         var options = new BrowserTypeLaunchOptions();
 
-        // 🛡️ DEVSECOPS FIX: Only apply aggressive memory flags if running inside Jenkins Linux
-        if (Environment.GetEnvironmentVariable("CI") == "true")
+        // Check if we are running in Jenkins (CI) or Local
+        bool isCI = Environment.GetEnvironmentVariable("CI") == "true";
+
+        // 🐛 LOCAL DEBUGGING: Force Playwright to ignore VS caching and show the UI
+        if (Environment.GetEnvironmentVariable("CI") != "true")
         {
+            Environment.SetEnvironmentVariable("PLAYWRIGHT_HEADLESS", "false");
+        }
+
+        if (isCI)
+        {
+            // 🛡️ DEVSECOPS FIX: Silent, aggressive memory flags for Jenkins
             options.Args = new[]
             {
-                "--disable-dev-shm-usage",
-                "--no-sandbox",
-                "--disable-gpu"
-            };
+            "--disable-dev-shm-usage",
+            "--no-sandbox",
+            "--disable-gpu"
+        };
+            options.Headless = true;
         }
+        else
+        {
+            // 🐛 LOCAL DEBUGGING: Show the browser UI and slow it down for the human eye
+            options.Headless = false;
+
+            // Injects a 50-millisecond delay between every action. 
+            // (Increase to 500 if you want it to run very slowly while you watch!)
+            options.SlowMo = 50;
+        }
+
         return options;
     }
 

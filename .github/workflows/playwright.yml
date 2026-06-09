@@ -10,8 +10,9 @@ on:
 
 jobs:
   playwright-tests:
-    timeout-minutes: 15 # Fails the pipeline if it hangs, preventing runaway billing
-    runs-on: ubuntu-latest # 🐧 Headless Linux container (Fastest & Cheapest)
+    timeout-minutes: 15 
+    # 🚀 CHANGED: This tells GitHub to route the job to your local machine!
+    runs-on: self-hosted
 
     # 🔐 THE FIX: Explicitly grant the GITHUB_TOKEN write access to push the Allure report
     permissions:

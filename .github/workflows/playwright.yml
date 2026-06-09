@@ -29,7 +29,7 @@ jobs:
           dotnet build src/Automation.Framework/ --configuration Release
 
       - name: 🌐 Install Playwright Browsers & OS Dependencies
-        run: pwsh src/Automation.Framework/bin/Release/net10.0/playwright.ps1 install --with-deps
+        run: pwsh src/Automation.Framework/bin/Release/net9.0/playwright.ps1 install --with-deps
 
       - name: 🧪 Execute UI Test Suite
         env:

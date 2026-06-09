@@ -41,12 +41,12 @@ jobs:
         run: dotnet test src/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
 
       - name: 📤 Archive Raw Allure Results
-        # Collects the generated JSON/XML chunks before the runner cleans up
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: raw-allure-results
-          path: src/bin/Release/net10.0/allure-results/
+          # 🎯 BULLETPROOF: Grabs Allure data regardless of the framework's internal structure
+          path: '**/allure-results/' 
           retention-days: 1
 
       - name: 📊 Upload Raw TRX Test Results (On Failure)

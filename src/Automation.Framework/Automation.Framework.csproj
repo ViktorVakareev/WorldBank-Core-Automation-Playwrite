@@ -40,5 +40,10 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="actions-runner\**\*" />
+		<EmbeddedResource Remove="actions-runner\**\*" />
+		<None Include="actions-runner\**\*" />
+	</ItemGroup>
 
 </Project>

@@ -14,37 +14,34 @@ public abstract class AiTriage : PageTest
     // Singleton HTTP client prevents port exhaustion during heavy parallel Llama requests
     private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
 
-    public BrowserTypeLaunchOptions LaunchOptions()
+    public override BrowserTypeLaunchOptions LaunchOptions()
     {
         var options = new BrowserTypeLaunchOptions();
 
-        // Check if we are running in Jenkins (CI) or Local
+        // Check if we are running in CI or Local
         bool isCI = Environment.GetEnvironmentVariable("CI") == "true";
 
         // 🐛 LOCAL DEBUGGING: Force Playwright to ignore VS caching and show the UI
-        if (Environment.GetEnvironmentVariable("CI") != "true")
+        if (!isCI)
         {
             Environment.SetEnvironmentVariable("PLAYWRIGHT_HEADLESS", "false");
         }
 
         if (isCI)
         {
-            // 🛡️ DEVSECOPS FIX: Silent, aggressive memory flags for Jenkins
+            // 🛡️ DEVSECOPS FIX: Silent, aggressive memory flags for CI runners
             options.Args = new[]
             {
-            "--disable-dev-shm-usage",
-            "--no-sandbox",
-            "--disable-gpu"
-        };
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+                "--disable-gpu"
+            };
             options.Headless = true;
         }
         else
         {
             // 🐛 LOCAL DEBUGGING: Show the browser UI and slow it down for the human eye
             options.Headless = false;
-
-            // Injects a 50-millisecond delay between every action. 
-            // (Increase to 500 if you want it to run very slowly while you watch!)
             options.SlowMo = 50;
         }
 
@@ -67,26 +64,48 @@ public abstract class AiTriage : PageTest
         return options;
     }
 
+    [SetUp]
+    public async Task EnterpriseSetupAsync()
+    {
+        // 🔬 PLAYWRIGHT TRACING: Begin recording the DOM, Network, and Console
+        await Context.Tracing.StartAsync(new TracingStartOptions
+        {
+            Screenshots = true,
+            Snapshots = true,
+            Sources = true
+        });
+    }
+
     [TearDown]
     public async Task ExecuteEnterpriseTeardownAsync()
     {
         var context = TestContext.CurrentContext;
         bool isFailed = context.Result.Outcome.Status == TestStatus.Failed;
         var testName = context.Test.Name;
+        var safeTestName = string.Join("_", testName.Split(Path.GetInvalidFileNameChars()));
 
         /* ==========================================
-           PHASE 1: VISUAL ARTIFACTS & I/O CLEANUP
+           PHASE 1: TRACING & VISUAL ARTIFACTS
            ========================================== */
         if (isFailed)
         {
-            var screenshotPath = Path.Combine(context.TestDirectory, "TestResults", $"{testName}_{Guid.NewGuid():N}.png");
+            // 1. Capture Full Page Screenshot
+            var screenshotPath = Path.Combine(context.TestDirectory, "TestResults", $"{safeTestName}_{Guid.NewGuid():N}.png");
             await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath, FullPage = true });
             TestContext.AddTestAttachment(screenshotPath, "📸 UI State on Failure");
+
+            // 2. Package and Save the Playwright Trace Zip
+            var tracePath = Path.Combine(context.TestDirectory, "TestResults", $"trace_{safeTestName}_{Guid.NewGuid():N}.zip");
+            await Context.Tracing.StopAsync(new TracingStopOptions { Path = tracePath });
+            TestContext.AddTestAttachment(tracePath, "🔍 Playwright DOM Trace (trace.playwright.dev)");
+        }
+        else
+        {
+            // If the test passed, gracefully discard the trace data from RAM
+            await Context.Tracing.StopAsync(new TracingStopOptions { Path = null });
         }
 
-        // 🚨 CRITICAL BUG FIX: We NO LONGER call await Context.CloseAsync() here! 
-        // PageTest handles this natively. Doing it manually causes TargetClosedExceptions.
-
+        // 3. Handle Video Cleanup
         if (Page.Video != null)
         {
             if (isFailed)
@@ -98,7 +117,7 @@ public abstract class AiTriage : PageTest
             {
                 try
                 {
-                    // Restored: Keeps your CI/CD storage lean by wiping successful test videos
+                    // Keeps storage lean by wiping successful test videos
                     await Page.Video.DeleteAsync();
                 }
                 catch (IOException ex)
@@ -122,15 +141,11 @@ public abstract class AiTriage : PageTest
             {
                 try
                 {
-                    // 1. Create a physical Markdown file in the TestResults directory
-                    var safeTestName = string.Join("_", testName.Split(Path.GetInvalidFileNameChars()));
                     var mdFileName = $"AI_Analysis_{safeTestName}_{Guid.NewGuid():N}.md";
                     var mdFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestResults", mdFileName);
 
-                    // 2. Write the Llama output to the disk
                     await File.WriteAllTextAsync(mdFilePath, aiAnalysis, Encoding.UTF8);
 
-                    // 3. Attach natively via NUnit. 
                     // 🛡️ Allure automatically intercepts this and pins it to the HTML report seamlessly.
                     TestContext.AddTestAttachment(mdFilePath, $"🤖 AI Analysis - {testName}");
                 }

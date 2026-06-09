@@ -47,12 +47,15 @@ jobs:
           path: '**/allure-results/' 
           retention-days: 1
 
-      - name: 📊 Upload Raw TRX Test Results (On Failure)
+      - name: 📊 Upload Test Results & Traces (On Failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nunit-test-results
-          path: '**/TestResults/*.trx'
+          name: test-results-and-traces
+          # Grabs the TRX logs AND any Playwright trace zip files
+          path: |
+            **/TestResults/*.trx
+            **/TestResults/*.zip
           retention-days: 7
 
   # 🐧 JOB 2: Process and host the report on GitHub's Linux Cloud (Bypasses the Container Action error)

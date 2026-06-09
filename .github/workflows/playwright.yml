@@ -13,6 +13,10 @@ jobs:
     timeout-minutes: 15 # Fails the pipeline if it hangs, preventing runaway billing
     runs-on: ubuntu-latest # 🐧 Headless Linux container (Fastest & Cheapest)
 
+    # 🔐 THE FIX: Explicitly grant the GITHUB_TOKEN write access to push the Allure report
+    permissions:
+      contents: write
+
     env:
       # 🛡️ THE HOOK: This triggers the headless & memory-safe logic we wrote in AiTriage.cs
       CI: true 
@@ -21,28 +25,29 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup .NET Core
+      - name: ⚙️ Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Update to '7.0.x' if you are using an older .NET version
+          dotnet-version: '10.0.x' 
 
       - name: 🏗️ Build Framework
-        run: dotnet build
+        run: dotnet build src/ --configuration Release
 
       - name: 🌐 Install Playwright Browsers & OS Dependencies
-        # IMPORTANT: Replace 'Automation.Framework' with your exact test project folder name!
-        run: pwsh ./Automation.Framework/bin/Debug/net8.0/playwright.ps1 install --with-deps
+        # Executing the officially generated PowerShell script from the .NET 10 Release folder
+        run: pwsh src/bin/Release/net10.0/playwright.ps1 install --with-deps
 
       - name: 🧪 Execute UI Test Suite
         # Runs the tests using the compiled DLLs without rebuilding
-        run: dotnet test --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx"
+        run: dotnet test src/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
 
       - name: 📊 Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
         id: allure-report
         with:
-          allure_results: allure-results
+          # Pointing directly to the directory where your framework drops the results
+          allure_results: src/bin/Release/net10.0/allure-results
           gh_pages: gh-pages
           allure_report: allure-report
           allure_history: allure-history
@@ -54,11 +59,12 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: allure-history
+
       - name: 📊 Upload Test Results (On Failure)
         # Always run this step even if the tests fail, so we can see what broke
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: nunit-test-results
-          path: '**/TestResults/'
+          path: '**/TestResults/*.trx'
           retention-days: 7

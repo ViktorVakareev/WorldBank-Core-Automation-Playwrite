@@ -22,23 +22,15 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x' 
-
       - name: 🏗️ Build Framework
-        # 🎯 FIXED: Pointing directly to the nested project folder
         run: dotnet build src/Automation.Framework/ --configuration Release
 
       - name: 🌐 Install Playwright Browsers & OS Dependencies
-        # 🎯 FIXED: Pointing to the correct nested bin folder
         run: pwsh src/Automation.Framework/bin/Release/net10.0/playwright.ps1 install --with-deps
 
       - name: 🧪 Execute UI Test Suite
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
-        # 🎯 FIXED: Pointing the test runner to the nested project folder
         run: dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
 
       - name: 📤 Archive Raw Allure Results

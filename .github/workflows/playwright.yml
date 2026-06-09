@@ -23,7 +23,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 🏗️ Build Framework
-        run: dotnet build src/Automation.Framework/ --configuration Release
+        # 🛡️ ARCHITECTURAL OVERRIDE: Forces the runner to use the 64-bit SDK regardless of host PATH
+        run: |
+          $env:PATH = "C:\Program Files\dotnet;" + $env:PATH
+          dotnet build src/Automation.Framework/ --configuration Release
 
       - name: 🌐 Install Playwright Browsers & OS Dependencies
         run: pwsh src/Automation.Framework/bin/Release/net10.0/playwright.ps1 install --with-deps
@@ -31,7 +34,9 @@ jobs:
       - name: 🧪 Execute UI Test Suite
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
-        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
+        run: |
+          $env:PATH = "C:\Program Files\dotnet;" + $env:PATH
+          dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
 
       - name: 📤 Archive Raw Allure Results
         if: always()

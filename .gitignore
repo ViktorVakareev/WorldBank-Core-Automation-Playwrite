@@ -24,3 +24,22 @@ Thumbs.db
 # Environment & Secrets
 .env
 local.runsettings
+# ==========================================
+# 🚀 Self-Hosted GitHub Runner & CI Artifacts
+# ==========================================
+# Ignore the entire actions-runner application folder
+**/actions-runner/
+
+# Ignore the workspace directory where GitHub downloads code to execute it
+**/_work/
+
+# Ignore the runner diagnostic engine logs
+*.log
+Runner_*
+Worker_*
+v4.completed
+
+# Ignore local test outputs that shouldn't be in source control
+**/TestResults/
+**/allure-results/
+**/allure-report/

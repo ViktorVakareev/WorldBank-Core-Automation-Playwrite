@@ -14,7 +14,7 @@ public abstract class AiTriage : PageTest
     // Singleton HTTP client prevents port exhaustion during heavy parallel Llama requests
     private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
 
-    public override BrowserTypeLaunchOptions LaunchOptions()
+    public BrowserTypeLaunchOptions LaunchOptions()
     {
         var options = new BrowserTypeLaunchOptions();
 

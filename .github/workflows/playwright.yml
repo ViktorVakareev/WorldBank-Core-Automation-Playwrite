@@ -37,7 +37,7 @@ jobs:
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
           ReportPortal_TraceLevel: Verbose
-        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults
+        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults -- NUnit.NumberOfTestWorkers=1
 
       - name: 📤 Archive Raw Allure Results
         if: always()

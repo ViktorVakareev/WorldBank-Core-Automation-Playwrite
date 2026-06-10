@@ -89,15 +89,28 @@ public abstract class AiTriage : PageTest
            ========================================== */
         if (isFailed)
         {
-            // 1. Capture Full Page Screenshot
-            var screenshotPath = Path.Combine(context.TestDirectory, "TestResults", $"{safeTestName}_{Guid.NewGuid():N}.png");
-            await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath, FullPage = true });
-            TestContext.AddTestAttachment(screenshotPath, "📸 UI State on Failure");
+            try
+            {
+                // 1. Capture Full Page Screenshot (Failsafe: Abort if browser is dead for 5s)
+                var screenshotPath = Path.Combine(context.TestDirectory, "TestResults", $"{safeTestName}_{Guid.NewGuid():N}.png");
+                await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath, FullPage = true })
+                          .WaitAsync(TimeSpan.FromSeconds(5));
+                TestContext.AddTestAttachment(screenshotPath, "📸 UI State on Failure");
 
-            // 2. Package and Save the Playwright Trace Zip
-            var tracePath = Path.Combine(context.TestDirectory, "TestResults", $"trace_{safeTestName}_{Guid.NewGuid():N}.zip");
-            await Context.Tracing.StopAsync(new TracingStopOptions { Path = tracePath });
-            TestContext.AddTestAttachment(tracePath, "🔍 Playwright DOM Trace (trace.playwright.dev)");
+                // 2. Package and Save the Playwright Trace Zip (Failsafe: Abort if trace engine is locked)
+                var tracePath = Path.Combine(context.TestDirectory, "TestResults", $"trace_{safeTestName}_{Guid.NewGuid():N}.zip");
+                await Context.Tracing.StopAsync(new TracingStopOptions { Path = tracePath })
+                          .WaitAsync(TimeSpan.FromSeconds(5));
+                TestContext.AddTestAttachment(tracePath, "🔍 Playwright DOM Trace (trace.playwright.dev)");
+            }
+            catch (TimeoutException)
+            {
+                TestContext.Progress.WriteLine("[WARNING] Browser process deadlocked. Visual artifact extraction aborted.");
+            }
+            catch (Exception ex)
+            {
+                TestContext.Progress.WriteLine($"[WARNING] Failed to extract visual artifacts: {ex.Message}");
+            }
         }
         else
         {
@@ -110,8 +123,16 @@ public abstract class AiTriage : PageTest
         {
             if (isFailed)
             {
-                var videoPath = await Page.Video.PathAsync();
-                TestContext.AddTestAttachment(videoPath, "🎥 Execution Recording");
+                try
+                {
+                    // Extracting the video path also requires communicating with the browser process
+                    var videoPath = await Page.Video.PathAsync().WaitAsync(TimeSpan.FromSeconds(5));
+                    TestContext.AddTestAttachment(videoPath, "🎥 Execution Recording");
+                }
+                catch (Exception ex)
+                {
+                    TestContext.Progress.WriteLine($"[WARNING] Could not retrieve video path: {ex.Message}");
+                }
             }
             else
             {

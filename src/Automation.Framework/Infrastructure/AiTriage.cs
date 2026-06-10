@@ -118,32 +118,20 @@ public abstract class AiTriage : PageTest
             await Context.Tracing.StopAsync(new TracingStopOptions { Path = null });
         }
 
-        // 3. Handle Video Cleanup
+        // 3. Handle Video Attachments
         if (Page.Video != null)
         {
             if (isFailed)
             {
                 try
                 {
-                    // Extracting the video path also requires communicating with the browser process
+                    // Safely extract the video path and attach it to ReportPortal/Allure
                     var videoPath = await Page.Video.PathAsync().WaitAsync(TimeSpan.FromSeconds(5));
                     TestContext.AddTestAttachment(videoPath, "🎥 Execution Recording");
                 }
                 catch (Exception ex)
                 {
                     TestContext.Progress.WriteLine($"[WARNING] Could not retrieve video path: {ex.Message}");
-                }
-            }
-            else
-            {
-                try
-                {
-                    // Keeps storage lean by wiping successful test videos
-                    await Page.Video.DeleteAsync();
-                }
-                catch (IOException ex)
-                {
-                    TestContext.Progress.WriteLine($"[WARNING] Video lock ignored: {ex.Message}");
                 }
             }
         }

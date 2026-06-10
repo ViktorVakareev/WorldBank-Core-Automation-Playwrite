@@ -32,12 +32,13 @@ jobs:
         run: pwsh src/Automation.Framework/bin/Release/net9.0/playwright.ps1 install --with-deps
 
       - name: 🧪 Execute UI Test Suite
-        # 🛑 OS-LEVEL FAILSAFE: Kills the entire process tree if it hangs for 5 minutes
-        timeout-minutes: 5 
+        timeout-minutes: 10 
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
           ReportPortal_TraceLevel: Verbose
-        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --verbosity normal --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults -- NUnit.NumberOfTestWorkers=1
+        # 1. Added console;verbosity=detailed to stream logs live instantly
+        # 2. Added --blame-hang-timeout 2m to catch the exact line of code that freezes
+        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults --blame-hang --blame-hang-timeout 2m -- NUnit.NumberOfTestWorkers=1
 
       - name: 📤 Archive Raw Allure Results
         if: always()

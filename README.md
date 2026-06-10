@@ -42,6 +42,7 @@ WorldBank.Automation.Solution/
 ├── Dockerfile.agent                 # Immutable Jenkins Agent Definition
 └── src/Automation.Framework/
     ├── local.runsettings            # Local execution configurations
+    ├── playwright.runsettings       # Specific Playwright execution profiles
     ├── ReportPortal.config.json     # Telemetry routing
     ├── allureConfig.json            # Artifact formatting
     ├── 📁 Infrastructure/           # DEVSECOPS & ENGINE LAYER
@@ -49,17 +50,35 @@ WorldBank.Automation.Solution/
     │   ├── AppConfig.cs             # Environment resolution
     │   └── GlobalSetup.cs           # Assembly-level hooks
     ├── 📁 Components/               # UI FRAGMENTS
+    │   ├── BaseComponent.cs         # Core component locator logic
     │   ├── GlobalNavigationComponent.cs 
+    │   ├── SandboxToggleComponent.cs # Environment toggling logic
     │   └── TransferStepperComponent.cs 
     ├── 📁 Actions/                  # STATELESS BUSINESS LOGIC
     │   ├── AuthActions.cs           
     │   └── TransferActions.cs       
     ├── 📁 Data/                     # TEST DATA MANAGEMENT
-    │   └── DataFactory.cs           
+    │   ├── DataFactory.cs           
+    │   └── StaticTestUsers.json     # Hardcoded fallback credentials/states
     └── 📁 Tests/                    # DECLARATIVE TEST SUITES
+        ├── AccessibilityTests.cs    # A11y compliance verifications
+        ├── LoginScenariosTests.cs   
+        ├── NavigationTests.cs       
+        ├── NetworkInterceptionTests.cs # API mocking and response validation
+        ├── SecurityScenariosTests.cs 
+        ├── VisualRegressionTests.cs # Pixel-perfect snapshot comparisons
+        ├── WorldBankDataDrivenTests.cs 
         └── WorldBankFunctionalTests.cs
 
 ```
+🔒 DevSecOps & Zero-Trust Integration
+Security is shift-left and integrated directly into the testing lifecycle.
+
+Zero-Trust Execution: The Playwright browser runs with aggressive memory and security flags (--disable-dev-shm-usage, --no-sandbox) in CI environments.
+
+Secret Vaulting: Passwords, API Keys, and UUIDs are strictly segregated from the codebase. GitHub Repository Secrets (${{ secrets.RP_API_KEY }}) and Jenkins Credential Vaults inject sensitive data directly into the runner's ephemeral environment variables at runtime.
+
+Trace Isolation: Playwright traces and video recordings are structurally isolated using WorkerId paths to prevent parallel threads from locking or corrupting each other's I/O streams.
 
 ## 💻 Getting Started
 

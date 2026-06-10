@@ -45,9 +45,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: raw-allure-results
-          # 🎯 BULLETPROOF: Grabs Allure data regardless of the framework's internal structure
-          path: '**/allure-results/' 
-          retention-days: 1
+          # 🎯 FORCE FLATTENING: Use the exact explicit path so files aren't buried in subfolders
+          path: src/Automation.Framework/bin/Release/net9.0/allure-results/
+          retention-days: 3
 
       - name: 📊 Upload Test Results & Traces (On Failure)
         if: always()
@@ -78,6 +78,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: raw-allure-results
+          # 🎯 MUST MATCH: This folder name must perfectly match the allure_results input below
           path: allure-results-input
 
       - name: 📊 Generate Allure Report HTML

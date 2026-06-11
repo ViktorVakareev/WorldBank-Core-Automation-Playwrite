@@ -12,7 +12,7 @@ namespace Automation.Framework.Infrastructure;
 public abstract class AiTriage : PageTest
 {
     // Singleton HTTP client prevents port exhaustion during heavy parallel Llama requests
-    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
+    private static readonly HttpClient HttpClient = new() { Timeout = TimeSpan.FromMinutes(5) };
 
     public BrowserTypeLaunchOptions LaunchOptions()
     {
@@ -139,7 +139,7 @@ public abstract class AiTriage : PageTest
         /* ==========================================
            PHASE 2: Llama AI FAILURE TRIAGE
            ========================================== */
-        if (isFailed && AppConfig.ShouldRunAiTriage())
+        if (isFailed)
         {
             var stackTrace = context.Result.StackTrace ?? "No stack trace available";
             var errorMessage = context.Result.Message ?? "No error message available";

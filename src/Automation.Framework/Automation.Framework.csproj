@@ -40,6 +40,13 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
+	
+	<ItemGroup>
+		<None Update="localRun.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
 	<ItemGroup>
 		<Compile Remove="actions-runner\**\*" />
 		<EmbeddedResource Remove="actions-runner\**\*" />

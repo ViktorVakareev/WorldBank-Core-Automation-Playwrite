@@ -36,10 +36,10 @@ jobs:
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
           ReportPortal_TraceLevel: Verbose
-        # 1. Added console;verbosity=detailed to stream logs live instantly
-        # 2. Added --blame-hang-timeout 2m to catch the exact line of code that freezes
-        run: dotnet test src/Automation.Framework/ --configuration Release --no-build --logger:"console;verbosity=detailed" --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults --blame-hang --blame-hang-timeout 2m -- NUnit.NumberOfTestWorkers=1
-
+          # 🧠 ACTIVATES THE AI TRIAGE ENGINE IN CI
+          RUN_AI_TRIAGE: "true" 
+        run: dotnet test src/Automation.Framework/ --configuration Release --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults -- NUnit.NumberOfTestWorkers=1
+        
       - name: 📤 Archive Raw Allure Results
         if: always()
         uses: actions/upload-artifact@v4

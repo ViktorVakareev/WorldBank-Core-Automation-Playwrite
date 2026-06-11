@@ -94,9 +94,6 @@ Trace Isolation: Playwright traces and video recordings are structurally isolate
 ```bash
 
 ```
-
-
-
 git clone https://github.com/ViktorVakareev/WorldBank-Core-Automation.git
 cd WorldBank-Core-Automation
 
@@ -122,6 +119,10 @@ ollama run llama3
     ```bash
 dotnet test src/ --settings src/Automation.Framework/local.runsettings
 
+```
+```
+**## Immutable framework**
+I designed the framework configuration to be immutable in source control but highly elastic at runtime. A developer can pull the repo, create an appsettings.local.json, turn Headless to false, crank up the SlowMo to 1000ms, and test against a local Docker database. Meanwhile, the GitHub Actions pipeline ignores all of that, runs Headless: true at lightning speed, and can seamlessly pivot from testing the Sandbox environment to the Staging environment just by us passing Framework__BaseUrl=https://staging.worldbank... as a GitHub secret, without changing a single line of code.
 ```
 
 ## 🧠 Writing Modern Tests

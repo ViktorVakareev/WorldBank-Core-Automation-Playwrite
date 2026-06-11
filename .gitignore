@@ -45,4 +45,4 @@ v4.completed
 **/allure-report/
 
 # Local developer configurations
-localRun.json
+appsettings.local.json

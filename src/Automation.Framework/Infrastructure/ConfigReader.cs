@@ -9,7 +9,7 @@ public static class ConfigReader
         _config = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             // 1. Load the baseline defaults (Committed to Git)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
 
             // 2. Load the local overrides (Git-ignored, overrides step 1)
             .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)

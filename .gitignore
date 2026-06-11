@@ -43,3 +43,6 @@ v4.completed
 **/TestResults/
 **/allure-results/
 **/allure-report/
+
+# Local developer configurations
+localRun.json

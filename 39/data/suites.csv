@@ -1,0 +1,2 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","3779","Auth_InvalidCredentials_ShouldDisplayGenericSecurityError","Automation.Framework","2026-06-11","passed","2026-06-11","LoginScenariosTests","Automation.Framework.Tests","LoginScenariosTests","Auth_InvalidCredentials_ShouldDisplayGenericSecurityError"

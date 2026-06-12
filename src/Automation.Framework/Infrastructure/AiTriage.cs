@@ -84,6 +84,10 @@ public abstract class AiTriage : PageTest
         var testName = context.Test.Name;
         var safeTestName = string.Join("_", testName.Split(Path.GetInvalidFileNameChars()));
 
+        // 🎯 THE FIX: Force the OS to create the directory on the ephemeral runner
+        var resultsDir = Path.Combine(context.TestDirectory, "TestResults");
+        Directory.CreateDirectory(resultsDir);
+
         /* ==========================================
            PHASE 1: TRACING & VISUAL ARTIFACTS
            ========================================== */
@@ -91,18 +95,18 @@ public abstract class AiTriage : PageTest
         {
             try
             {
-                // 1. Capture Full Page Screenshot (Failsafe: Abort if browser is dead for 5s)
-                var screenshotPath = Path.Combine(context.TestDirectory, "TestResults", $"{safeTestName}_{Guid.NewGuid():N}.png");
+                // 1. Capture Full Page Screenshot
+                var screenshotPath = Path.Combine(resultsDir, $"{safeTestName}_{Guid.NewGuid():N}.png");
                 await Page.ScreenshotAsync(new PageScreenshotOptions { Path = screenshotPath, FullPage = true })
                           .WaitAsync(TimeSpan.FromSeconds(5));
                 TestContext.AddTestAttachment(screenshotPath, "📸 UI State on Failure");
 
-                // 2. Package and Save the Playwright Trace Zip (Failsafe: Abort if trace engine is locked)
-                var tracePath = Path.Combine(context.TestDirectory, "TestResults", $"trace_{safeTestName}_{Guid.NewGuid():N}.zip");
+                // 2. Package and Save the Playwright Trace Zip
+                var tracePath = Path.Combine(resultsDir, $"trace_{safeTestName}_{Guid.NewGuid():N}.zip");
                 await Context.Tracing.StopAsync(new TracingStopOptions { Path = tracePath })
                           .WaitAsync(TimeSpan.FromSeconds(5));
                 TestContext.AddTestAttachment(tracePath, "🔍 Playwright DOM Trace (trace.playwright.dev)");
-            }
+            }           
             catch (TimeoutException)
             {
                 TestContext.Progress.WriteLine("[WARNING] Browser process deadlocked. Visual artifact extraction aborted.");
@@ -139,7 +143,7 @@ public abstract class AiTriage : PageTest
         /* ==========================================
            PHASE 2: Llama AI FAILURE TRIAGE
            ========================================== */
-        if (isFailed)
+        if (isFailed && ConfigReader.ShouldRunAiTriage)
         {
             var stackTrace = context.Result.StackTrace ?? "No stack trace available";
             var errorMessage = context.Result.Message ?? "No error message available";
@@ -151,12 +155,11 @@ public abstract class AiTriage : PageTest
                 try
                 {
                     var mdFileName = $"AI_Analysis_{safeTestName}_{Guid.NewGuid():N}.md";
-                    var mdFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestResults", mdFileName);
+                    // 🎯 THE FIX: Use the guaranteed directory here too
+                    var mdFilePath = Path.Combine(resultsDir, mdFileName);
 
                     await File.WriteAllTextAsync(mdFilePath, aiAnalysis, Encoding.UTF8);
-
-                    // 🛡️ Allure automatically intercepts this and pins it to the HTML report seamlessly.
-                    TestContext.AddTestAttachment(mdFilePath, $"🤖 AI Analysis - {testName}");
+                    TestContext.AddTestAttachment(mdFilePath, $"🤖 AI Analysis - {testName}");                
                 }
                 catch (Exception ex)
                 {

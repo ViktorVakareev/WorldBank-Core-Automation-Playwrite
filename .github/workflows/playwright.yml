@@ -49,18 +49,25 @@ jobs:
           path: src/Automation.Framework/bin/Release/net9.0/allure-results/
           retention-days: 3
 
+      - name: 🕒 Set Current Date
+        if: always()
+        shell: pwsh
+        # Grabs the date in YYYY-MM-DD format and injects it into GitHub's environment variables
+        run: echo "CURRENT_DATE=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_ENV
+
       - name: 📊 Upload Test Results & Traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          # 🎯 DYNAMIC NAMING: Appends the GitHub build number to the zip file!
-          name: test-results-and-traces-Run${{ github.run_number }}
+          # 🎯 DYNAMIC NAMING: Injects the build number AND the date from the previous step!
+          name: test-results-and-traces-Run${{ github.run_number }}-${{ env.CURRENT_DATE }}
           path: |
             **/TestResults/**/*.trx
             **/TestResults/**/*.zip
             **/TestResults/**/*.md
             **/TestResults/**/*.png
             **/TestResults/**/*.webm
+            **/TestResults/**/*.playlist
           retention-days: 7
 
   # 🐧 JOB 2: Process and host the report on GitHub's Linux Cloud (Bypasses the Container Action error)

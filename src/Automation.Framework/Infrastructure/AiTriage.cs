@@ -93,6 +93,9 @@ public abstract class AiTriage : PageTest
            ========================================== */
         if (isFailed)
         {
+            // 🎯 NEW: Add the fully-qualified test name to our VS Playlist tracker
+            GlobalSetup.FailedTestNames.Add(context.Test.FullName);
+
             try
             {
                 // 1. Capture Full Page Screenshot

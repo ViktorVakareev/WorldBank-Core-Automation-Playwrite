@@ -31,6 +31,13 @@ jobs:
       - name: 🌐 Install Playwright Browsers & OS Dependencies
         run: pwsh src/Automation.Framework/bin/Release/net9.0/playwright.ps1 install --with-deps
 
+      - name: 🧹 Purge Zombie Processes
+        shell: pwsh
+        run: |
+          Write-Host "Cleaning up orphaned Playwright and .NET host processes..."
+          Get-Process -Name chrome, node, ffmpeg, testhost -ErrorAction SilentlyContinue | Stop-Process -Force
+          Write-Host "Cleanup complete."
+
       - name: 🧪 Execute UI Test Suite
         timeout-minutes: 10 
         env:

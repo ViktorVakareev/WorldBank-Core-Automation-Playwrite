@@ -56,9 +56,11 @@ jobs:
           # 🎯 DYNAMIC NAMING: Appends the GitHub build number to the zip file!
           name: test-results-and-traces-Run${{ github.run_number }}
           path: |
-            **/TestResults/*.trx
-            **/TestResults/*.zip
-            **/TestResults/*.md     # 🎯 CRITICAL: Tells GitHub not to delete the AI reports!
+            **/TestResults/**/*.trx
+            **/TestResults/**/*.zip
+            **/TestResults/**/*.md
+            **/TestResults/**/*.png
+            **/TestResults/**/*.webm
           retention-days: 7
 
   # 🐧 JOB 2: Process and host the report on GitHub's Linux Cloud (Bypasses the Container Action error)

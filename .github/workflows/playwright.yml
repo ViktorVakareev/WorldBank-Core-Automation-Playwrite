@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           # 🎯 DYNAMIC NAMING: Injects the build number AND the date from the previous step!
-          name: test-results-and-traces-Run${{ github.run_number }}-${{ env.CURRENT_DATE }}
+          name: test-results-and-traces-Run${{ github.run_number }}
           path: |
             **/TestResults/**/*.trx
             **/TestResults/**/*.zip

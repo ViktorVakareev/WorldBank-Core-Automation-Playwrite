@@ -36,8 +36,8 @@ jobs:
         env:
           ReportPortal_Server_Authentication_Uuid: ${{ secrets.RP_API_KEY }}
           ReportPortal_TraceLevel: Verbose
-          # 🧠 ACTIVATES THE AI TRIAGE ENGINE IN CI
-          RUN_AI_TRIAGE: "true" 
+          # 🎯 THE FIX: Maps perfectly to _config["AiTriage:Enabled"]
+          AiTriage__Enabled: true 
         run: dotnet test src/Automation.Framework/ --configuration Release --logger:"trx;LogFileName=TestResults.trx" --results-directory ./TestResults -- NUnit.NumberOfTestWorkers=1
         
       - name: 📤 Archive Raw Allure Results

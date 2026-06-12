@@ -49,15 +49,15 @@ jobs:
           path: src/Automation.Framework/bin/Release/net9.0/allure-results/
           retention-days: 3
 
-      - name: 📊 Upload Test Results & Traces (On Failure)
+      - name: 📊 Upload Test Results & Traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-and-traces
-          # Grabs the TRX logs AND any Playwright trace zip files
           path: |
             **/TestResults/*.trx
             **/TestResults/*.zip
+            **/TestResults/*.md     # 🎯 CRITICAL: Tells GitHub not to delete the AI reports!
           retention-days: 7
 
   # 🐧 JOB 2: Process and host the report on GitHub's Linux Cloud (Bypasses the Container Action error)

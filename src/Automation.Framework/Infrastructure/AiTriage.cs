@@ -4,6 +4,7 @@ using Microsoft.Playwright.NUnit;
 using NUnit.Framework.Interfaces;
 using System.Text;
 using System.Text.Json;
+using Automation.Framework;
 
 namespace Automation.Framework.Infrastructure;
 

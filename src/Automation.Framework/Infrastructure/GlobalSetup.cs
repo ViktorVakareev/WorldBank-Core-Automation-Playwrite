@@ -7,12 +7,12 @@ using System.Xml.Linq;
 [assembly: Parallelizable(ParallelScope.None)]
 [assembly: LevelOfParallelism(1)]
 
-namespace Automation.Framework.Infrastructure;
+namespace Automation.Framework;
 
 [SetUpFixture]
 public class GlobalSetup
 {
-    // 🎯 Thread-safe collection to catch failures during parallel execution
+    // Thread-safe collection to catch failures
     public static ConcurrentBag<string> FailedTestNames = new();
 
     [OneTimeSetUp]
@@ -29,15 +29,14 @@ public class GlobalSetup
     [OneTimeTearDown]
     public void GenerateFailedTestsPlaylist()
     {
-        // Only generate the playlist if there were actual failures
         if (!FailedTestNames.IsEmpty)
         {
-            var resultsDir = Path.Combine(TestContext.CurrentContext.WorkDirectory, "TestResults");
+            // 🎯 THE FIX: Use TestDirectory to perfectly match AiTriage.cs
+            var resultsDir = Path.Combine(TestContext.CurrentContext.TestDirectory, "TestResults");
             Directory.CreateDirectory(resultsDir);
 
             var playlistPath = Path.Combine(resultsDir, "FailedTests.playlist");
 
-            // 🎯 Build a Visual Studio 2022 compatible (V2.0) XML Playlist
             var includesRule = new XElement("Rule",
                 new XAttribute("Name", "Includes"),
                 new XAttribute("Match", "Any"),
@@ -55,7 +54,9 @@ public class GlobalSetup
             );
 
             playlistDoc.Save(playlistPath);
-            TestContext.Progress.WriteLine($"[INFO] Generated VS Playlist with {FailedTestNames.Count} failed tests.");
+
+            // Write to the global console so we can see it in the .trx
+            TestContext.Progress.WriteLine($"[INFO] Generated VS Playlist at {playlistPath} with {FailedTestNames.Count} failed tests.");
         }
     }
 }
